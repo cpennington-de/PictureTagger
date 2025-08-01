@@ -1,0 +1,7 @@
+#the following are for Linux and Mac
+pillows
+transformers
+torch
+einops
+pyvips-binary
+pyvips
