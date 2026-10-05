@@ -1,5 +1,5 @@
 #the following are for Linux and Mac
-pillows
+pillow
 transformers
 torch
 einops
