@@ -1,3 +1,9 @@
+#Program to take in a list of images and generate a CSV file for use with Shuterstock CSV uploads
+#Colin Pennington 
+
+
+
+
 import os
 import csv
 import tkinter as tk
@@ -31,17 +37,15 @@ def select_files():
     )
 
 
-
-
-
 root = tk.Tk()
 root.title("Picture Tagger")
 #root.withdraw()
-# Make sure MPS is available
-if not torch.backends.mps.is_available():
-    raise SystemError("MPS (Metal Performance Shaders) is not available on this machine.")
 
-device = torch.device("mps")
+
+#Section to check what platform the user is on, MacOS or Nvidia GPU, and set the device accordingly
+#device = torch.device("mps")
+device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+print(f"Using device: {device}")
 
 # Load model on MPS
 model = AutoModelForCausalLM.from_pretrained(
@@ -104,13 +108,14 @@ for item in file_paths:
     #need to work on the Categories section, Model not producing output needed
     #print('Categories') 
     #print(model.query(image, "pick exactly two from the list (seperated by a , and nothing else)" + categories_types)["answer"])
-    categories = model.query(image, """"return exactly one substring of either 'nature', 'urban', 'industrial' 
+    categories = model.query(image, """"return exactly one or two substring of either 'nature', 'Buildings/Landmarks', 'industrial' 
     "Requirements:
-    - Return only one of the three categories: 'nature', 'urban', or 'industrial
+    - Return only one of the three categories: 'nature', 'Buildings/Landmarks', or 'industrial
     - Do not include any other text, punctuation, or explanation
     - Use lowercase letters only
     - Provide a single word output with no quotes or formatting
     - choose the category that best represents the primary subject and setting of the image
+    - if two categories are equally relevant, return both separated by a comma
     """)["answer"]
     
     nextrow = [filename, description, keywords, categories, 'n', 'n', 'n']
