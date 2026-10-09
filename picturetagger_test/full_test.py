@@ -46,7 +46,6 @@ device = torch.device("mps")
 # Load model on MPS
 model = AutoModelForCausalLM.from_pretrained(
     "vikhyatk/moondream2",
-    revision="2025-01-09",
     trust_remote_code=True
 ).to(device)
 
@@ -78,22 +77,45 @@ for item in file_paths:
 
     #print('Description')
     #print(model.query(image, "Generate a 10 to 20 word title of the image fit for a stock photo title")["answer"])
-    description = model.query(image, "Generate a description of the image to provide a precise but descriptive title for a stock photo website, at least 10 words max 20 words, must include location, located in " + LocationCity + ", " + LocationState + "}")["answer"]
-    
+    description = model.query(image, """Generate a concise stock photo description for: {}, {}. 
+    Requirements:
+    - Exactly 12-18 words
+    - Include specific location
+    - Start with main subject/action
+    - Add relevant details (time of day, weather, mood, composition)
+    - Use SEO-friendly keywords
+    - Professional tone suitable for stock photo sites""".format(LocationCity, LocationState))["answer"]
+
 
     #print("Keywords:")
     #print(model.query(image, "Generate 8 tags for the image")["answer"])
-    keywords = model.query(image, "return a string including 8 tags seperated by commas")["answer"]
+    keywords = model.query(image, """Generate relevant stock photo keywords/tags for this image located in {}, {}.
+    Requirements:
+    - Separate by commas only (no quotes, no numbering)
+    - Include: subject, location, mood/style, composition type
+    - Use single words or 2-word phrases
+    - Make them searchable and specific
+    - Professional/commercial tone
+    - Must include the state in at least one keyword (convert 2 character state abbreviation to full state name)
+    - Must include the city in at least one keyword
+    - Minimum 12 keywords, maximum 20 keywords
+    Example format: subject, action, location, mood, style, detail, composition, category""".format(LocationCity, LocationState))["answer"]
 
     #need to work on the Categories section, Model not producing output needed
     #print('Categories') 
     #print(model.query(image, "pick exactly two from the list (seperated by a , and nothing else)" + categories_types)["answer"])
-    #categories = model.query(image, "return a substring of only one category seperated by commas ->" + categories_types)["answer"]
+    categories = model.query(image, """"return exactly one substring of either 'nature', 'urban', 'industrial' 
+    "Requirements:
+    - Return only one of the three categories: 'nature', 'urban', or 'industrial
+    - Do not include any other text, punctuation, or explanation
+    - Use lowercase letters only
+    - Provide a single word output with no quotes or formatting
+    - choose the category that best represents the primary subject and setting of the image
+    """)["answer"]
     
-    nextrow = [filename, description, keywords, 'nature', 'n', 'n', 'n']
+    nextrow = [filename, description, keywords, categories, 'n', 'n', 'n']
     with open('data.csv', 'a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(nextrow)
-
 
 
